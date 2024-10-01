@@ -83,17 +83,16 @@ def acomm(op1: Op, op2: Op) -> Op:
 
 
 @jax.jit
-def sx():
+def sx() -> Op:
     return Op(jnp.array([[0, 1],[1, 0]]))
 
 
 @jax.jit
-def sy():
+def sy() -> Op:
     return Op(jnp.array([[0, -1j],[1j, 0]]))
 
 
 @jax.jit
-def sz():
+def sz() -> Op:
     return Op(jnp.array([[1, 0],[0, -1]]))
-
 
