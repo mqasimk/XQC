@@ -219,3 +219,28 @@ def sz() -> Op:
 @jax.jit
 def id2() -> Op:
     return Op(jnp.eye(2))
+
+
+@jax.jit
+def su(n):
+    """
+    This function takes in the power of 2 to generate the basis for su(2**n) in terms of the pauli
+    operators defined in the z basis, excluding the identity term.
+    :param n: The number of qubits in a system
+    :return: A jax array of size 2**(2n)-1 containing  2**n x 2**n basis matrices of type Op
+    """
+    basis = []
+    operators = [id2(), sx(), sy(), sz()]
+
+    for i in range(4**n):
+        matrix = np.array([1]) 
+        temp = i
+        for _ in range(n):
+            op_index = temp % 4
+            matrix = tensor(operators[op_index], matrix)
+            temp //= 4
+
+        if not np.allclose(matrix, np.eye(2**n)): #exclude the identity matrix
+            basis.append(matrix)
+    return jax.array(basis)
+
