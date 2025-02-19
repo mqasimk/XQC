@@ -1,5 +1,7 @@
 import jax
 import jax.numpy as jnp
+import itertools
+import functools as ft
 
 
 # We need to register the class as a valid JAX type through the following wrapper. This tells JAX how to flatten and
@@ -225,23 +227,26 @@ def id2() -> Op:
     return Op(jnp.eye(2))
 
 
-@jax.jit
-def su2():
+def su(n):
     """
-    This function generates the basis for su(2) in terms of the pauli operators defined in the z basis,
-    including the identity term.
-    :return: A jax array of size 4 containing  2 x 2 basis matrices of type Op
+    Generate a basis for the lie algebra su(2**n)
+    :param n: number of 2-level systems
+    :return: the basis as a jax.numpy arrat
     """
-    return [id2(), sx(), sy(), sz()]
+    #all pauli ops
+    I = jnp.eye(2)
+    X = jnp.array([[0,1],[1,0]])
+    Y = jnp.array([[0,-1j],[1j,0]])
+    Z = jnp.array([[1,0],[0,-1]])
+    A = (I,X,Y,Z)
 
+    #repeat can be replaced by n
+    #this line generates an array by taking the cartesian product of A with itself, and is a list of pauli elements
+    B =itertools.product(A,repeat=n)
 
-@jax.jit
-def su4():
-    """
-    This function generates the basis for su(4) in terms of the pauli operators defined in the z basis,
-    including the identity term.
-    :return: A 1-D list of size 16, of the 15 basis elements for su(4) + the identity element
-    """
-    ops = su2()
-    return [tensor(ops[i],ops[j]) for i in range(len(ops)) for j in range(len(ops))]
-
+    #this loop takes a nested kronecker of each line in the list
+    basis = []
+    for lst in B:
+        XX = ft.reduce(jnp.kron, lst)
+        basis.append(XX)
+    return jnp.array(basis)
