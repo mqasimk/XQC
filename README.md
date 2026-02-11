@@ -21,8 +21,9 @@ You can also run the script directly via the clickable reference [`generate_docs
 
 - Core quantum operator class [`Op`](xqc/baseops.py:13) with JAX‑accelerated arithmetic, tensor products, commutators, and partial trace.
 - [`Hamiltonian`](xqc/hamiltonian.py:5) class for building linear combinations of operators.
-- Placeholder [`Solver`](xqc/solvers.py:9) base class for future algorithm implementations.
-- Comprehensive test suite covering operators and Hamiltonians ([`test_baseops_extended.py`](xqc/test_baseops_extended.py:1), [`test_hamiltonian.py`](xqc/test_hamiltonian.py:1)).
+- `State` class for representing quantum states (kets and density matrices) with support for partial traces.
+- `Solver` class providing exact diagonalization methods for time-independent Hamiltonians.
+- Comprehensive test suite covering operators, Hamiltonians, and solvers (`test_baseops_extended.py`, `test_hamiltonian.py`, `test_solvers.py`).
 - Sphinx documentation generated from docstrings.
 
 ## Installation
@@ -36,7 +37,7 @@ pip install -e .
 
 ```python
 import jax.numpy as jnp
-from xqc import sx, sz, Op, Hamiltonian
+from xqc import sx, sz, Op, Hamiltonian, State, Solver
 
 # Define Pauli operators
 op_x = sx()
@@ -45,6 +46,15 @@ op_z = sz()
 # Build a Hamiltonian H = 0.5*X + 1.5*Z
 ham = Hamiltonian([0.5, 1.5], [op_x, op_z])
 print("Hamiltonian matrix:", ham.operator)
+
+# Define an initial state |0>
+psi0 = State(jnp.array([1, 0]), is_ket=True)
+
+# Evolve the state
+solver = Solver(ham)
+ts = jnp.linspace(0, 1.0, 10)
+states = solver.solve(psi0, ts)
+print("Final state:", states[-1])
 ```
 
 ## Development status
