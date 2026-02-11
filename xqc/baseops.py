@@ -4,11 +4,10 @@ import itertools
 import functools as ft
 
 
-# We need to register the class as a valid JAX type through the following wrapper. This tells JAX how to flatten and
+# Register the class as a valid JAX pytree node using the wrapper. This tells JAX how to flatten and
 # unflatten the object for XLA compilation.
-# We do not need to JIT the methods of the class definition. Any JIT-ed method defined elsewhere will be able to
-# construct a pytree node for Op and accelerate the desired operation. JIT compiling class methods becomes
-# self-referential.
+# The methods of this class are JIT-compiled for performance. JIT-compiling class methods is safe
+# because Op is a registered pytree node, allowing JAX to handle them correctly.
 
 
 @jax.tree_util.register_pytree_node_class
@@ -48,29 +47,48 @@ class Op:
         return NotImplemented
     @jax.jit
     def __mul__(self, other):
-        other = jnp.complex64(other)
-        if other.dtype in [jnp.int32, jnp.int64, jnp.float32, jnp.float64, jnp.complex64]:
-            return Op(self.operator * other, self.subs)
-        return NotImplemented
+        """
+        Multiply the operator by a scalar or broadcastable array.
+        Supports Python scalars and JAX arrays.
+        """
+        # Convert to JAX array if not already
+        other_arr = jnp.array(other, dtype=jnp.complex64) if not isinstance(other, jnp.ndarray) else other
+        if other_arr.dtype not in (jnp.int32, jnp.int64, jnp.float32, jnp.float64, jnp.complex64):
+            return NotImplemented
+        return Op(self.operator * other_arr, self.subs)
+
     @jax.jit
     def __rmul__(self, other):
-        other = jnp.complex64(other)
-        if other.dtype in [jnp.int32, jnp.int64, jnp.float32, jnp.float64, jnp.complex64]:
-            return Op(self.operator * other, self.subs)
-        return NotImplemented
-    @jax.jit
+        """
+        Right-hand scalar multiplication.
+        """
+        other_arr = jnp.array(other, dtype=jnp.complex64) if not isinstance(other, jnp.ndarray) else other
+        if other_arr.dtype not in (jnp.int32, jnp.int64, jnp.float32, jnp.float64, jnp.complex64):
+            return NotImplemented
+        return Op(self.operator * other_arr, self.subs)
+
     def __add__(self, other):
+        """
+        Add two Op objects. Subsystem structures must match.
+        """
         if isinstance(other, Op):
+            if not jnp.array_equal(self.subs, other.subs):
+                raise ValueError("Subsystem structures must match for addition.")
             return Op(self.operator + other.operator, self.subs)
         return NotImplemented
-    @jax.jit
+
     def __sub__(self, other):
+        """
+        Subtract two Op objects. Subsystem structures must match.
+        """
         if isinstance(other, Op):
+            if not jnp.array_equal(self.subs, other.subs):
+                raise ValueError("Subsystem structures must match for subtraction.")
             return Op(self.operator - other.operator, self.subs)
         return NotImplemented
     @jax.jit
     def eigs(self):
-        jnp.linalg.eigh(self.operator)
+        return jnp.linalg.eigh(self.operator)
     @jax.jit
     def tr(self):
         return self.operator.trace()
@@ -82,7 +100,7 @@ class Op:
         return Op(self.operator.conj(), self.subs)
     @jax.jit
     def dag(self):
-        return Op(self.operator.conj().transpose())
+        return Op(self.operator.conj().transpose(), self.subs)
     """
     The flatten and unflatten functions are called by the pytree constructed when JIT is called on an Op object. This
     enables us to JIT any function of the Op class.
@@ -107,7 +125,6 @@ def tensor(op1: Op, op2: Op) -> Op:
     return Op(jnp.kron(op1.operator, op2.operator), jnp.concatenate([op1.subs, op2.subs], axis=0))
 
 
-@jax.jit
 def comm(op1: Op, op2: Op) -> Op:
     """
     Commutator of two Op objects
@@ -118,7 +135,6 @@ def comm(op1: Op, op2: Op) -> Op:
     return op1@op2-op2@op1
 
 
-@jax.jit
 def acomm(op1: Op, op2: Op) -> Op:
     """
     Anti-commutator of two Op objects
@@ -172,7 +188,7 @@ def _ptr_util(arr, dims, rem):
     Takes partial trace over the subsystem defined by 'rem'
     arr: a matrix
     dims: a 1D jax array containing the dimensions of each subsystem
-    rem: the indices of the subsytems to be traced out
+    rem: the indices of the subsystems to be traced out
     """
     dims_ = jnp.array(dims)
     # Reshape the matrix into a tensor with the following shape:
@@ -212,8 +228,8 @@ def sy() -> Op:
 @jax.jit
 def sz() -> Op:
     """
-    This function constructs a 2x2 pauli-x matrix as an Op object in the computational (z) basis.
-    :return: 2x2 pauli-y matrix in the computational (z) basis.
+    This function constructs a 2x2 Pauli-Z matrix as an Op object in the computational (z) basis.
+    :return: 2x2 Pauli-Z matrix in the computational (z) basis.
     """
     return Op(jnp.array([[1, 0],[0, -1]]))
 
@@ -229,9 +245,9 @@ def id2() -> Op:
 
 def su(n):
     """
-    Generate a basis for the lie algebra su(2**n)
+    Generate a basis for the operator space of 2**n dimensions (Pauli basis).
     :param n: number of 2-level systems
-    :return: the basis as a jax.numpy arrat
+    :return: the basis as a jax.numpy array
     """
     #all pauli ops
     I = jnp.eye(2)
