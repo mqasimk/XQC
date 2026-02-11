@@ -36,8 +36,7 @@ pip install -e .
 
 ```python
 import jax.numpy as jnp
-from xqc.baseops import sx, sz, Op
-from xqc.hamiltonian import Hamiltonian
+from xqc import sx, sz, Op, Hamiltonian
 
 # Define Pauli operators
 op_x = sx()

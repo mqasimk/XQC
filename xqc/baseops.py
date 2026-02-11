@@ -35,12 +35,10 @@ class Op:
         return f"Op[\nvalue=\n{self.operator},\nshape={self.shape},\nsubsystems=\n{self.subs}\n]"
     def __repr__(self):
         return self.__str__()
-    @jax.jit
     def __matmul__(self, other):
         if isinstance(other, Op):
             return Op(jnp.matmul(self.operator, other.operator), self.subs)
         return NotImplemented
-    @jax.jit
     def __rmatmul__(self, other):
         if isinstance(other, Op):
             return Op(jnp.matmul(other.operator, self.operator), self.subs)

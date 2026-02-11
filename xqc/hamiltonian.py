@@ -104,6 +104,10 @@ class Hamiltonian:
     def tr(self):
         return self.ht.tr()
 
+    def dims(self):
+        """Return the dimensions of the subsystems."""
+        return self.ht.subs
+
     def T(self):
         return Hamiltonian.from_op(self.ht.T())
 
