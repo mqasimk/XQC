@@ -19,5 +19,5 @@ docs:
 	python docs/generate_docs.py
 
 clean:
-	@echo "Cleaning generated documentation..."
-	rm -rf docs/_build
+	@echo "Cleaning build artifacts..."
+	rm -rf docs/_build build dist *.egg-info

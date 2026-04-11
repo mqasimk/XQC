@@ -25,16 +25,20 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = [
+test = [
     "pytest>=7.0",
-    "ruff>=0.4.0",
 ]
 docs = [
     "sphinx>=7.0",
 ]
+dev = [
+    "xqc[test,docs]",
+    "ruff>=0.4.0",
+]
 
 [tool.setuptools.packages.find]
 include = ["xqc*"]
+exclude = ["tests*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
