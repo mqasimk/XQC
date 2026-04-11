@@ -1,6 +1,8 @@
 import jax
 import jax.numpy as jnp
-from .baseops import Op, ptr as base_ptr
+
+from .baseops import Op
+from .baseops import ptr as base_ptr
 
 
 @jax.tree_util.register_pytree_node_class
@@ -16,9 +18,10 @@ class State:
           If None, the system is considered as a single system.
     is_ket: Boolean indicating if the state is a ket. If None, it is inferred from the array shape.
     """
+
     def __init__(self, arr: jnp.ndarray, subs=None, is_ket=None):
         self.arr = jnp.array(arr, dtype=jnp.complex64)
-        
+
         # Infer is_ket if not provided
         if is_ket is None:
             if self.arr.ndim == 1 or (self.arr.ndim == 2 and self.arr.shape[1] == 1):
@@ -26,14 +29,16 @@ class State:
             elif self.arr.ndim == 2 and self.arr.shape[0] == self.arr.shape[1]:
                 self.is_ket = False
             else:
-                raise ValueError("Input array must be a vector (ket) or a square matrix (density matrix).")
+                raise ValueError(
+                    "Input array must be a vector (ket) or a square matrix (density matrix)."
+                )
         else:
             self.is_ket = is_ket
 
         # Standardize ket shape to (N, 1)
         if self.is_ket and self.arr.ndim == 1:
             self.arr = self.arr.reshape(-1, 1)
-            
+
         # Validate density matrix shape
         if not self.is_ket:
             if self.arr.ndim != 2 or self.arr.shape[0] != self.arr.shape[1]:
@@ -63,7 +68,7 @@ class State:
         """
         if not self.is_ket:
             return self
-        
+
         # |psi><psi|
         dm_arr = self.arr @ self.arr.conj().T
         return State(dm_arr, subs=self.subs, is_ket=False)
@@ -81,13 +86,13 @@ class State:
         """
         # Convert to density matrix first
         dm_state = self.to_dm()
-        
+
         # Wrap in Op to use baseops.ptr
         op_wrapper = Op(dm_state.arr, dm_state.subs)
-        
+
         # Perform partial trace using baseops implementation
         reduced_op = base_ptr(op_wrapper, keep)
-        
+
         # Return result as a State
         return State(reduced_op.operator, subs=reduced_op.subs, is_ket=False)
 
@@ -109,12 +114,16 @@ class State:
 
     @jax.jit
     def __mul__(self, other):
-        other_arr = jnp.array(other, dtype=jnp.complex64) if not isinstance(other, jnp.ndarray) else other
+        other_arr = (
+            jnp.array(other, dtype=jnp.complex64) if not isinstance(other, jnp.ndarray) else other
+        )
         return State(self.arr * other_arr, subs=self.subs, is_ket=self.is_ket)
 
     @jax.jit
     def __rmul__(self, other):
-        other_arr = jnp.array(other, dtype=jnp.complex64) if not isinstance(other, jnp.ndarray) else other
+        other_arr = (
+            jnp.array(other, dtype=jnp.complex64) if not isinstance(other, jnp.ndarray) else other
+        )
         return State(self.arr * other_arr, subs=self.subs, is_ket=self.is_ket)
 
     def __sub__(self, other):
@@ -128,6 +137,7 @@ class State:
 
     def __matmul__(self, other):
         from .hamiltonian import Hamiltonian
+
         if isinstance(other, (Op, Hamiltonian)):
             if self.is_ket:
                 return NotImplemented
@@ -137,6 +147,7 @@ class State:
 
     def __rmatmul__(self, other):
         from .hamiltonian import Hamiltonian
+
         if isinstance(other, (Op, Hamiltonian)):
             return State(other.operator @ self.arr, subs=self.subs, is_ket=self.is_ket)
         return NotImplemented

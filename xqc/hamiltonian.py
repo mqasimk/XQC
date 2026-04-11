@@ -1,6 +1,8 @@
 import jax
 import jax.numpy as jnp
+
 from .baseops import Op
+
 
 @jax.tree_util.register_pytree_node_class
 class Hamiltonian:
@@ -21,9 +23,7 @@ class Hamiltonian:
         # Convert coefficients to a JAX array of complex64 for consistency
         coefs_arr = jnp.array(coefs, dtype=jnp.complex64)
         if coefs_arr.shape[0] != len(ops):
-            raise ValueError(
-                "Number of coefficients must match number of operators"
-            )
+            raise ValueError("Number of coefficients must match number of operators")
         # Build the linear combination term by term
         self.ht = None
         for c, op in zip(coefs_arr, ops):

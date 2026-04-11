@@ -1,12 +1,18 @@
-# Makefile for XQC development automation
+# Makefile for XQC
 
-.PHONY: docs clean test lint
+.PHONY: install test lint format docs clean
+
+install:
+	pip install -e ".[dev]"
 
 test:
-	pytest -v
+	python -m pytest tests/ -v
 
 lint:
 	ruff check xqc/
+
+format:
+	ruff format xqc/
 
 docs:
 	@echo "Generating documentation..."

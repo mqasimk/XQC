@@ -4,10 +4,13 @@ This module provides solver classes for quantum dynamics.
 """
 
 import functools
+
 import jax
 import jax.numpy as jnp
+
 from .hamiltonian import Hamiltonian
 from .states import State
+
 
 class Solver:
     """General solver class for quantum dynamics.
@@ -88,7 +91,7 @@ class TimeIndependentSolver(Solver):
             ts_arr = ts_arr.reshape(1)
 
         evolved_arrays = self._evolve(self.evals, self.evecs, state0.arr, ts_arr, state0.is_ket)
-        
+
         return [State(arr, subs=state0.subs, is_ket=state0.is_ket) for arr in evolved_arrays]
 
     @staticmethod
@@ -109,5 +112,5 @@ class TimeIndependentSolver(Solver):
             else:
                 factor = exp_diag[:, None] * exp_diag.conj()[None, :]
                 return v @ (state0_eig * factor) @ v_dag
-        
+
         return jax.vmap(step)(ts)

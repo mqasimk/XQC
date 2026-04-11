@@ -1,17 +1,28 @@
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
+*.egg
 dist/
 build/
-*.egg
+*.so
 
 # IDE
 .idea/
 .vscode/
 
-# Docs build
+# Docs build artifacts
 docs/_build/
+
+# Environment
+.env
+.venv/
+venv/
 
 # OS
 .DS_Store
+Thumbs.db
+
+# JAX
+*.npy
