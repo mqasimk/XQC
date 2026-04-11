@@ -1,6 +1,8 @@
 import jax
 import jax.numpy as jnp
+
 from .baseops import Op
+
 
 @jax.tree_util.register_pytree_node_class
 class Hamiltonian:
