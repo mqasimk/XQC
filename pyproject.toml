@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xqc"
+version = "0.1.0"
+description = "A JAX-based quantum simulation library for accelerating noisy simulations of open quantum systems"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.10"
+dependencies = [
+    "jax>=0.4.20",
+    "jaxlib>=0.4.20",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0",
+]
+docs = [
+    "sphinx>=7.0",
+]
+dev = [
+    "xqc[test,docs]",
+    "ruff>=0.4.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["xqc*"]
+exclude = ["tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
