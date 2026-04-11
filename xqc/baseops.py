@@ -1,8 +1,8 @@
+import functools as ft
+import itertools
+
 import jax
 import jax.numpy as jnp
-import itertools
-import functools as ft
-
 
 # Register the class as a valid JAX pytree node using the wrapper. This tells JAX how to flatten and
 # unflatten the object for XLA compilation.

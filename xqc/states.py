@@ -1,6 +1,8 @@
 import jax
 import jax.numpy as jnp
-from .baseops import Op, ptr as base_ptr
+
+from .baseops import Op
+from .baseops import ptr as base_ptr
 
 
 @jax.tree_util.register_pytree_node_class
@@ -18,7 +20,7 @@ class State:
     """
     def __init__(self, arr: jnp.ndarray, subs=None, is_ket=None):
         self.arr = jnp.array(arr, dtype=jnp.complex64)
-        
+
         # Infer is_ket if not provided
         if is_ket is None:
             if self.arr.ndim == 1 or (self.arr.ndim == 2 and self.arr.shape[1] == 1):
@@ -33,7 +35,7 @@ class State:
         # Standardize ket shape to (N, 1)
         if self.is_ket and self.arr.ndim == 1:
             self.arr = self.arr.reshape(-1, 1)
-            
+
         # Validate density matrix shape
         if not self.is_ket:
             if self.arr.ndim != 2 or self.arr.shape[0] != self.arr.shape[1]:
@@ -63,7 +65,7 @@ class State:
         """
         if not self.is_ket:
             return self
-        
+
         # |psi><psi|
         dm_arr = self.arr @ self.arr.conj().T
         return State(dm_arr, subs=self.subs, is_ket=False)
@@ -81,13 +83,13 @@ class State:
         """
         # Convert to density matrix first
         dm_state = self.to_dm()
-        
+
         # Wrap in Op to use baseops.ptr
         op_wrapper = Op(dm_state.arr, dm_state.subs)
-        
+
         # Perform partial trace using baseops implementation
         reduced_op = base_ptr(op_wrapper, keep)
-        
+
         # Return result as a State
         return State(reduced_op.operator, subs=reduced_op.subs, is_ket=False)
 
