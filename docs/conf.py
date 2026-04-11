@@ -1,6 +1,7 @@
 # docs/conf.py
 import os
 import sys
+from importlib.metadata import version
 # Insert the parent directory of the project into sys.path, so that autodoc can find the xqc package
 sys.path.insert(0, os.path.abspath('..'))
 
@@ -8,7 +9,7 @@ sys.path.insert(0, os.path.abspath('..'))
 project = 'XQC'
 author = 'XQC Developers'
 # The full version, including alpha/beta/rc tags
-release = '0.1.0'
+release = version("xqc")
 
 # -- General configuration ---------------------------------------------------
 extensions = [

@@ -140,27 +140,3 @@ class State:
         if isinstance(other, (Op, Hamiltonian)):
             return State(other.operator @ self.arr, subs=self.subs, is_ket=self.is_ket)
         return NotImplemented
-
-    def __sub__(self, other):
-        if isinstance(other, State):
-            if self.is_ket != other.is_ket:
-                raise ValueError("Cannot subtract Ket and Density Matrix directly.")
-            if not jnp.array_equal(self.subs, other.subs):
-                raise ValueError("Subsystem structures must match for subtraction.")
-            return State(self.arr - other.arr, subs=self.subs, is_ket=self.is_ket)
-        return NotImplemented
-
-    def __matmul__(self, other):
-        from .hamiltonian import Hamiltonian
-        if isinstance(other, (Op, Hamiltonian)):
-            if self.is_ket:
-                return NotImplemented
-            # DM @ Op -> DM (technically just a matrix, but stored as State(is_ket=False))
-            return State(self.arr @ other.operator, subs=self.subs, is_ket=False)
-        return NotImplemented
-
-    def __rmatmul__(self, other):
-        from .hamiltonian import Hamiltonian
-        if isinstance(other, (Op, Hamiltonian)):
-            return State(other.operator @ self.arr, subs=self.subs, is_ket=self.is_ket)
-        return NotImplemented
